@@ -4,12 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b62ff9c6-4c42-4e7d-b3a7-060b76312ec9" name="Changes" comment="Commit4: erste version der codes für die 4Dateien + launcher">
-      <change afterPath="$PROJECT_DIR$/Mastermind/src/main/java/com/example/mastermind/HelloApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Mastermind/src/main/java/com/example/mastermind/HelloController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/zeiler.md" beforeDir="false" afterPath="$PROJECT_DIR$/zeiler.md" afterDir="false" />
-    </list>
+    <list default="true" id="b62ff9c6-4c42-4e7d-b3a7-060b76312ec9" name="Changes" comment="Commit5: starten durch anpassung von Apllication und Controller" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -76,7 +71,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1773832767975</updated>
-      <workItem from="1773832769287" duration="2496000" />
+      <workItem from="1773832769287" duration="2689000" />
     </task>
     <task id="LOCAL-00001" summary="Commit1: .gitignore + Projekt erstellen">
       <option name="closed" value="true" />
@@ -118,7 +113,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773834892292</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Commit5: starten durch anpassung von Apllication und Controller">
+      <option name="closed" value="true" />
+      <created>1773835435351</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1773835435351</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -141,6 +144,7 @@
     <MESSAGE value="Commit2.1: .gitignore verschieben" />
     <MESSAGE value="Commit3: Erstellen der richtigen Dateien nach Model-View-Controller Prinzip" />
     <MESSAGE value="Commit4: erste version der codes für die 4Dateien + launcher" />
-    <option name="LAST_COMMIT_MESSAGE" value="Commit4: erste version der codes für die 4Dateien + launcher" />
+    <MESSAGE value="Commit5: starten durch anpassung von Apllication und Controller" />
+    <option name="LAST_COMMIT_MESSAGE" value="Commit5: starten durch anpassung von Apllication und Controller" />
   </component>
 </project>

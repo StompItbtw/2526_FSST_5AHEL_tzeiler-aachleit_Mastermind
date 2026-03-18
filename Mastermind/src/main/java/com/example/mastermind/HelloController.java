@@ -1,10 +1,8 @@
 package com.example.mastermind;
 
 /**
- * Launcher – startet die JavaFX-Anwendung.
+ * HelloController – wird nicht verwendet.
+ * Datei bleibt bestehen damit das Projekt kompiliert.
  */
-public class Launcher {
-    public static void main(String[] args) {
-        HelloApplication.main(args);
-    }
+public class HelloController {
 }
