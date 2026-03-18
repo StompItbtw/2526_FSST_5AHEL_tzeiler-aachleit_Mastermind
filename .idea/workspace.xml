@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="b62ff9c6-4c42-4e7d-b3a7-060b76312ec9" name="Changes" comment="" />
+    <list default="true" id="b62ff9c6-4c42-4e7d-b3a7-060b76312ec9" name="Changes" comment="Commit1: .gitignore verschieben" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,12 +32,19 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -56,11 +63,44 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1773832767975</updated>
-      <workItem from="1773832769287" duration="63000" />
+      <workItem from="1773832769287" duration="388000" />
     </task>
+    <task id="LOCAL-00001" summary="Commit1: .gitignore + Projekt erstellen">
+      <option name="closed" value="true" />
+      <created>1773833028635</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1773833028635</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Commit1: .gitignore verschieben">
+      <option name="closed" value="true" />
+      <created>1773833146841</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1773833146841</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Commit1: .gitignore + Projekt erstellen" />
+    <MESSAGE value="Commit1: .gitignore verschieben" />
+    <option name="LAST_COMMIT_MESSAGE" value="Commit1: .gitignore verschieben" />
   </component>
 </project>
