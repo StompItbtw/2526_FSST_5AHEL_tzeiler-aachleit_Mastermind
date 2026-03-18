@@ -19,3 +19,7 @@ Bild: Javafx Anwendung
 erstelle mir jetzt den code für alle 4 Klassen mit Kommentare zur Erklärung was gemacht wurde
 
 was schreibe ich in launcher
+
+durch löschen der Application und controller kann ich das projekt jetzt nicht mehr starten
+
+kannst du es mir so anpassen das es mit controller und applikation funktioniert
