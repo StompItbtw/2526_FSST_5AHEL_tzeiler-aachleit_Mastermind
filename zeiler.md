@@ -29,3 +29,8 @@ Bild: Speicherstruktur
 
 beim starten dieser fehler  
 Bild: Bild von fehler
+
+## 19.03
+
+das ist die ausgabe in der konsole, erstelle mir jetzt in interface dazu nach der aufgabenstellung
+
