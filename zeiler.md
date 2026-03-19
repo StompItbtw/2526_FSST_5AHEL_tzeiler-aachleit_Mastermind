@@ -23,3 +23,14 @@ was schreibe ich in launcher
 durch löschen der Application und controller kann ich das projekt jetzt nicht mehr starten
 
 kannst du es mir so anpassen das es mit controller und applikation funktioniert
+
+irgendetwas passt an meiner Struktur nicht, wo liegt hier der fehler  
+Bild: Speicherstruktur
+
+beim starten dieser fehler  
+Bild: Bild von fehler
+
+## 19.03
+
+das ist die ausgabe in der konsole, erstelle mir jetzt in interface dazu nach der aufgabenstellung
+

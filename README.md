@@ -11,5 +11,11 @@ Achleitner gegangen
 Zeiler:
 Erstellen der richtigen Dateien nach Model-View-Controller Prinzip     
 Erstellen der Codes für die 4 Dateien
+Fehler mit pom beim starten
 
+
+##19.03
+### 1 Stunde:
+Zeiler:  
+Oberfläche erstellen
 
