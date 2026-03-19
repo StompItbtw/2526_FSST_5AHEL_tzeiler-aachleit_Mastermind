@@ -86,7 +86,7 @@ public class MastermindModel {
                 }
             }
         }
-        return "•".repeat(exact) + "o".repeat(color);
+        return "*".repeat(exact) + "o".repeat(color);
     }
 
     // Getter

@@ -97,7 +97,7 @@ public class MastermindView {
         legend.setAlignment(Pos.CENTER);
         legend.setPadding(new Insets(6, 0, 0, 0));
 
-        Label blackLegend = new Label("● = richtige Position");
+        Label blackLegend = new Label("* = richtige Position");
         blackLegend.setFont(Font.font("Monospace", 11));
         blackLegend.setStyle("-fx-text-fill: #CCCCCC;");
 
@@ -287,7 +287,7 @@ public class MastermindView {
                 Circle ci = new Circle(6);
                 if (idx < result.length()) {
                     char fb = result.charAt(idx);
-                    if (fb == '•') {
+                    if (fb == '*') {
                         ci.setFill(Color.web("#111111"));
                         ci.setStroke(Color.web("#999999")); ci.setStrokeWidth(1);
                     } else if (fb == 'o') {
