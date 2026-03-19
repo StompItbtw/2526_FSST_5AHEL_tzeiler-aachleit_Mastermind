@@ -8,190 +8,93 @@ import java.util.Random;
  */
 public class MastermindModel {
 
-    // Erlaubte Farben (R=Rot, G=Grün, B=Blau, Y=Gelb, O=Orange, P=Pink)
     public static final char[] ALLOWED_COLORS = {'R', 'G', 'B', 'Y', 'O', 'P'};
-
-    // Länge des geheimen Codes
-    public static final int CODE_LENGTH = 4;
-
-    // Maximale Anzahl an Versuchen
+    public static final int CODE_LENGTH  = 4;
     public static final int MAX_ATTEMPTS = 10;
 
-    // Der geheime Code als char-Array
-    private final char[] secretCode;
-
-    // Speichert alle bisherigen Versuche des Spielers
+    private final char[]   secretCode;
     private final char[][] guessHistory;
-
-    // Speichert die Auswertung (•/o) zu jedem Versuch
     private final String[] resultHistory;
-
-    // Zählt die bisherigen Versuche
-    private int currentAttempt;
-
-    // Gibt an ob der Spieler gewonnen hat
+    private int     currentAttempt;
     private boolean gameWon;
 
-    /**
-     * Konstruktor: Initialisiert das Modell und generiert einen neuen geheimen Code.
-     */
     public MastermindModel() {
-        this.secretCode = generateCode();
-        this.guessHistory = new char[MAX_ATTEMPTS][CODE_LENGTH];
+        this.secretCode    = generateCode();
+        this.guessHistory  = new char[MAX_ATTEMPTS][CODE_LENGTH];
         this.resultHistory = new String[MAX_ATTEMPTS];
         this.currentAttempt = 0;
-        this.gameWon = false;
+        this.gameWon        = false;
     }
 
-    /**
-     * Generiert einen zufälligen 4-stelligen Code aus den erlaubten Farben.
-     * Farben dürfen sich wiederholen.
-     *
-     * @return char-Array mit dem geheimen Code
-     */
+    /** Generiert einen zufälligen 4-stelligen Code (Wiederholungen erlaubt). */
     private char[] generateCode() {
-        Random random = new Random();
+        Random rng  = new Random();
         char[] code = new char[CODE_LENGTH];
         for (int i = 0; i < CODE_LENGTH; i++) {
-            // Zufälligen Index aus ALLOWED_COLORS wählen
-            code[i] = ALLOWED_COLORS[random.nextInt(ALLOWED_COLORS.length)];
+            code[i] = ALLOWED_COLORS[rng.nextInt(ALLOWED_COLORS.length)];
         }
         return code;
     }
 
-    /**
-     * Überprüft ob eine Eingabe gültig ist.
-     * Gültig = genau 4 Zeichen, alle aus den erlaubten Farben.
-     *
-     * @param input Die Eingabe des Spielers als String (z.B. "RGBY")
-     * @return true wenn gültig, false sonst
-     */
+    /** Prüft ob eine Eingabe gültig ist (4 Zeichen, alle aus ALLOWED_COLORS). */
     public boolean isValidInput(String input) {
-        // Null oder falsche Länge abfangen
-        if (input == null || input.length() != CODE_LENGTH) {
-            return false;
-        }
-
-        // Jeden Buchstaben auf Gültigkeit prüfen
+        if (input == null || input.length() != CODE_LENGTH) return false;
         for (char c : input.toUpperCase().toCharArray()) {
-            boolean found = false;
-            for (char allowed : ALLOWED_COLORS) {
-                if (c == allowed) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) return false;
+            boolean ok = false;
+            for (char a : ALLOWED_COLORS) { if (c == a) { ok = true; break; } }
+            if (!ok) return false;
         }
         return true;
     }
 
-    /**
-     * Verarbeitet einen Rateversuch des Spielers:
-     * - Speichert den Versuch in der History
-     * - Berechnet die Auswertung (• und o)
-     * - Erhöht den Versuchszähler
-     *
-     * @param input Die gültige Eingabe des Spielers (z.B. "RGBY")
-     */
+    /** Verarbeitet einen Rateversuch: speichert ihn und berechnet die Auswertung. */
     public void processGuess(String input) {
         char[] guess = input.toUpperCase().toCharArray();
-
-        // Versuch in der History speichern
-        guessHistory[currentAttempt] = guess;
-
-        // Auswertung berechnen und speichern
+        guessHistory[currentAttempt]  = guess;
         String result = evaluate(guess);
         resultHistory[currentAttempt] = result;
-
-        // Prüfen ob der Spieler gewonnen hat (alle 4 Positionen korrekt)
-        if (result.equals("••••")) {
-            gameWon = true;
-        }
-
+        if (result.equals("••••")) gameWon = true;
         currentAttempt++;
     }
 
     /**
-     * Berechnet die Auswertung eines Rateversuchs.
-     * • = richtige Farbe an richtiger Position
-     * o = richtige Farbe an falscher Position
-     *
-     * Wichtig: Zuerst alle • zählen, dann alle o – damit keine Farbe doppelt gezählt wird.
-     *
-     * @param guess Der Rateversuch als char-Array
-     * @return String aus • und o (z.B. "••o")
+     * Berechnet Auswertung:
+     * • = richtige Farbe, richtige Position
+     * o = richtige Farbe, falsche Position
      */
     private String evaluate(char[] guess) {
-        // Hilfsvariablen um bereits gezählte Positionen zu markieren
         boolean[] secretUsed = new boolean[CODE_LENGTH];
-        boolean[] guessUsed = new boolean[CODE_LENGTH];
+        boolean[] guessUsed  = new boolean[CODE_LENGTH];
+        int exact = 0, color = 0;
 
-        int exactMatches = 0;  // richtige Farbe, richtige Position
-        int colorMatches = 0;  // richtige Farbe, falsche Position
-
-        // 1. Durchgang: Exakte Treffer zählen (•)
+        // 1. Exakte Treffer
         for (int i = 0; i < CODE_LENGTH; i++) {
             if (guess[i] == secretCode[i]) {
-                exactMatches++;
-                secretUsed[i] = true;  // diese Position ist bereits verbraucht
-                guessUsed[i] = true;
+                exact++;
+                secretUsed[i] = guessUsed[i] = true;
             }
         }
-
-        // 2. Durchgang: Farbtreffer an falscher Position zählen (o)
+        // 2. Farbtreffer an falscher Position
         for (int i = 0; i < CODE_LENGTH; i++) {
-            if (guessUsed[i]) continue;  // bereits als • gezählt
-
+            if (guessUsed[i]) continue;
             for (int j = 0; j < CODE_LENGTH; j++) {
-                if (secretUsed[j]) continue;  // bereits verbraucht
-
+                if (secretUsed[j]) continue;
                 if (guess[i] == secretCode[j]) {
-                    colorMatches++;
-                    secretUsed[j] = true;  // damit dieselbe Geheimcode-Position nicht 2× zählt
+                    color++;
+                    secretUsed[j] = true;
                     break;
                 }
             }
         }
-
-        // Ergebnis-String aufbauen (• vor o)
-        return "•".repeat(exactMatches) + "o".repeat(colorMatches);
+        return "•".repeat(exact) + "o".repeat(color);
     }
 
-    // ── Getter für Controller und View ──────────────────────────────────────
-
-    /** Gibt zurück ob das Spiel gewonnen wurde. */
-    public boolean isGameWon() {
-        return gameWon;
-    }
-
-    /** Gibt zurück ob alle Versuche verbraucht sind. */
-    public boolean isGameOver() {
-        return currentAttempt >= MAX_ATTEMPTS;
-    }
-
-    /** Gibt die Anzahl der verbleibenden Versuche zurück. */
-    public int getRemainingAttempts() {
-        return MAX_ATTEMPTS - currentAttempt;
-    }
-
-    /** Gibt den aktuellen Versuchszähler zurück (0-basiert). */
-    public int getCurrentAttempt() {
-        return currentAttempt;
-    }
-
-    /** Gibt die bisherigen Rateversuche zurück. */
-    public char[][] getGuessHistory() {
-        return guessHistory;
-    }
-
-    /** Gibt die bisherigen Auswertungen zurück. */
-    public String[] getResultHistory() {
-        return resultHistory;
-    }
-
-    /** Gibt den geheimen Code als String zurück (für Spielende). */
-    public String getSecretCodeAsString() {
-        return new String(secretCode);
-    }
+    // Getter
+    public boolean  isGameWon()            { return gameWon; }
+    public boolean  isGameOver()           { return currentAttempt >= MAX_ATTEMPTS; }
+    public int      getRemainingAttempts() { return MAX_ATTEMPTS - currentAttempt; }
+    public int      getCurrentAttempt()   { return currentAttempt; }
+    public char[][] getGuessHistory()     { return guessHistory; }
+    public String[] getResultHistory()    { return resultHistory; }
+    public String   getSecretCodeAsString() { return new String(secretCode); }
 }

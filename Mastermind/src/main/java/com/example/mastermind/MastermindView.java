@@ -1,147 +1,415 @@
 package com.example.mastermind;
 
-import java.util.Scanner;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import java.util.function.Consumer;
 
 /**
- * VIEW – verantwortlich für die gesamte Ein- und Ausgabe.
- * Kennt das Model NUR um Eingaben zu validieren.
- * Hat keine Spiellogik.
+ * VIEW – baut die gesamte JavaFX-Benutzeroberfläche.
+ * Enthält keine Spiellogik – nur Darstellung und Eingabe.
+ * Kommuniziert mit dem Controller über Callback-Funktionen.
  */
 public class MastermindView {
 
-    // Scanner für Benutzereingaben (einmal erstellt, immer wiederverwendet)
-    private final Scanner scanner;
+    // ── Farben für die Spieloberfläche ─────────────────────────────────────
+    private static final String BG_DARK    = "#1C1C2E";
+    private static final String BG_ROW     = "#252540";
+    private static final String BG_PANEL   = "#16213E";
+    private static final String COLOR_TEXT = "#E0E0FF";
+    private static final String ACCENT     = "#7B68EE";
+    private static final String EMPTY_PEG  = "#333355";
+
+    // ── UI-Komponenten ──────────────────────────────────────────────────────
+    private VBox boardContainer;       // Spielfeld mit allen Versuchen
+    private HBox currentGuessDisplay;  // 4 Slots für aktuellen Versuch
+    private Label remainingLabel;      // Verbleibende Versuche
+    private Button submitButton;
+    private Button deleteButton;
+
+    // ── Callbacks – werden vom Controller gesetzt ──────────────────────────
+    private Consumer<Character> onColorSelected;
+    private Runnable onSubmit;
+    private Runnable onDelete;
 
     /**
-     * Konstruktor: Initialisiert den Scanner.
+     * Baut die komplette JavaFX-Szene und gibt sie zurück.
      */
-    public MastermindView() {
-        this.scanner = new Scanner(System.in);
+    public Scene buildScene() {
+        VBox root = new VBox(0);
+        root.setStyle("-fx-background-color: " + BG_DARK + ";");
+
+        root.getChildren().add(buildTitleArea());
+
+        // Spielfeld
+        boardContainer = new VBox(6);
+        boardContainer.setPadding(new Insets(10, 20, 10, 20));
+        boardContainer.setStyle("-fx-background-color: " + BG_DARK + ";");
+        for (int i = 0; i < MastermindModel.MAX_ATTEMPTS; i++) {
+            boardContainer.getChildren().add(buildEmptyRow(i + 1));
+        }
+
+        ScrollPane scrollPane = new ScrollPane(boardContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPrefHeight(400);
+        scrollPane.setStyle(
+                "-fx-background: " + BG_DARK + ";" +
+                        "-fx-background-color: " + BG_DARK + ";" +
+                        "-fx-border-color: transparent;"
+        );
+        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+
+        root.getChildren().addAll(scrollPane, buildBottomPanel());
+
+        return new Scene(root, 480, 700);
+    }
+
+    // ── Layout-Methoden ────────────────────────────────────────────────────
+
+    /** Baut den Titel oben. */
+    private VBox buildTitleArea() {
+        VBox area = new VBox(4);
+        area.setAlignment(Pos.CENTER);
+        area.setPadding(new Insets(18, 0, 14, 0));
+        area.setStyle("-fx-background-color: " + BG_PANEL + ";");
+
+        Label title = new Label("MASTERMIND");
+        title.setFont(Font.font("Monospace", FontWeight.BOLD, 26));
+        title.setStyle("-fx-text-fill: " + ACCENT + ";");
+
+        Label sub = new Label("Errate den 4-farbigen Code in 10 Versuchen");
+        sub.setFont(Font.font("Monospace", 12));
+        sub.setStyle("-fx-text-fill: #8888AA;");
+
+        // Legende
+        HBox legend = new HBox(20);
+        legend.setAlignment(Pos.CENTER);
+        legend.setPadding(new Insets(6, 0, 0, 0));
+
+        Label blackLegend = new Label("● = richtige Position");
+        blackLegend.setFont(Font.font("Monospace", 11));
+        blackLegend.setStyle("-fx-text-fill: #CCCCCC;");
+
+        Label whiteLegend = new Label("○ = falsche Position");
+        whiteLegend.setFont(Font.font("Monospace", 11));
+        whiteLegend.setStyle("-fx-text-fill: #CCCCCC;");
+
+        legend.getChildren().addAll(blackLegend, whiteLegend);
+        area.getChildren().addAll(title, sub, legend);
+        return area;
+    }
+
+    /** Baut eine leere Platzhalter-Zeile. */
+    private HBox buildEmptyRow(int rowNumber) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setPadding(new Insets(7, 14, 7, 14));
+        row.setStyle(
+                "-fx-background-color: " + BG_ROW + ";" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-opacity: 0.35;"
+        );
+
+        Label num = new Label(String.format("%2d", rowNumber));
+        num.setMinWidth(22);
+        num.setFont(Font.font("Monospace", 12));
+        num.setStyle("-fx-text-fill: #555577;");
+
+        HBox pegs = new HBox(8);
+        for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) {
+            pegs.getChildren().add(makePeg(null));
+        }
+
+        Rectangle sep = new Rectangle(2, 28);
+        sep.setFill(Color.web("#333355"));
+
+        row.getChildren().addAll(num, pegs, sep, makeEmptyFeedback());
+        return row;
+    }
+
+    /** Baut eine ausgefüllte Zeile mit Farben und Feedback. */
+    private HBox buildFilledRow(int rowNumber, char[] guess, String result) {
+        HBox row = new HBox(10);
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.setPadding(new Insets(7, 14, 7, 14));
+        row.setStyle(
+                "-fx-background-color: " + BG_ROW + ";" +
+                        "-fx-background-radius: 8;"
+        );
+
+        Label num = new Label(String.format("%2d", rowNumber));
+        num.setMinWidth(22);
+        num.setFont(Font.font("Monospace", 12));
+        num.setStyle("-fx-text-fill: #8888AA;");
+
+        HBox pegs = new HBox(8);
+        for (char c : guess) {
+            pegs.getChildren().add(makePeg(c));
+        }
+
+        Rectangle sep = new Rectangle(2, 28);
+        sep.setFill(Color.web("#444466"));
+
+        row.getChildren().addAll(num, pegs, sep, makeFilledFeedback(result));
+        return row;
+    }
+
+    /** Baut den unteren Eingabebereich. */
+    private VBox buildBottomPanel() {
+        VBox panel = new VBox(12);
+        panel.setPadding(new Insets(14, 20, 18, 20));
+        panel.setStyle(
+                "-fx-background-color: " + BG_PANEL + ";" +
+                        "-fx-border-color: #333355; -fx-border-width: 1 0 0 0;"
+        );
+
+        // Aktueller Versuch
+        Label guessTitle = new Label("Dein Versuch:");
+        guessTitle.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
+        guessTitle.setStyle("-fx-text-fill: " + COLOR_TEXT + ";");
+
+        currentGuessDisplay = new HBox(10);
+        currentGuessDisplay.setAlignment(Pos.CENTER_LEFT);
+        for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) {
+            currentGuessDisplay.getChildren().add(makePeg(null));
+        }
+
+        remainingLabel = new Label("Verbleibende Versuche: " + MastermindModel.MAX_ATTEMPTS);
+        remainingLabel.setFont(Font.font("Monospace", 12));
+        remainingLabel.setStyle("-fx-text-fill: #8888AA;");
+
+        // Farb-Buttons
+        Label colorTitle = new Label("Farbe wählen:");
+        colorTitle.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
+        colorTitle.setStyle("-fx-text-fill: " + COLOR_TEXT + ";");
+
+        HBox colorBtns = new HBox(10);
+        colorBtns.setAlignment(Pos.CENTER_LEFT);
+        for (char c : MastermindModel.ALLOWED_COLORS) {
+            colorBtns.getChildren().add(makeColorButton(c));
+        }
+
+        // Steuer-Buttons
+        HBox ctrlBtns = new HBox(10);
+        ctrlBtns.setAlignment(Pos.CENTER_LEFT);
+
+        submitButton = new Button("✓  Abschicken");
+        submitButton.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
+        submitButton.setStyle(
+                "-fx-background-color: " + ACCENT + ";" +
+                        "-fx-text-fill: white;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-padding: 9 18 9 18;" +
+                        "-fx-cursor: hand;"
+        );
+        submitButton.setOnMouseEntered(e -> submitButton.setStyle(
+                "-fx-background-color: #9988FF;-fx-text-fill: white;" +
+                        "-fx-background-radius: 8;-fx-padding: 9 18 9 18;-fx-cursor: hand;"));
+        submitButton.setOnMouseExited(e -> submitButton.setStyle(
+                "-fx-background-color: " + ACCENT + ";-fx-text-fill: white;" +
+                        "-fx-background-radius: 8;-fx-padding: 9 18 9 18;-fx-cursor: hand;"));
+
+        deleteButton = new Button("← Löschen");
+        deleteButton.setFont(Font.font("Monospace", 13));
+        deleteButton.setStyle(
+                "-fx-background-color: #3A3A5C;" +
+                        "-fx-text-fill: " + COLOR_TEXT + ";" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-padding: 9 18 9 18;" +
+                        "-fx-cursor: hand;"
+        );
+
+        submitButton.setOnAction(e -> { if (onSubmit != null) onSubmit.run(); });
+        deleteButton.setOnAction(e -> { if (onDelete != null) onDelete.run(); });
+
+        ctrlBtns.getChildren().addAll(submitButton, deleteButton);
+        panel.getChildren().addAll(
+                guessTitle, currentGuessDisplay, remainingLabel,
+                colorTitle, colorBtns, ctrlBtns
+        );
+        return panel;
+    }
+
+    // ── Peg / Feedback Hilfsmethoden ───────────────────────────────────────
+
+    /** Erstellt einen Peg-Kreis. null = leerer Platzhalter. */
+    private Circle makePeg(Character c) {
+        Circle circle = new Circle(17);
+        if (c == null) {
+            circle.setFill(Color.web(EMPTY_PEG));
+            circle.setStroke(Color.web("#444466"));
+            circle.setStrokeWidth(1.5);
+        } else {
+            circle.setFill(colorFor(c));
+            circle.setStroke(Color.web("#FFFFFF", 0.2));
+            circle.setStrokeWidth(1.5);
+        }
+        return circle;
+    }
+
+    /** Leeres 2x2 Feedback-Grid. */
+    private GridPane makeEmptyFeedback() {
+        GridPane g = new GridPane();
+        g.setHgap(4); g.setVgap(4);
+        g.setPadding(new Insets(0, 0, 0, 8));
+        for (int r = 0; r < 2; r++) for (int c = 0; c < 2; c++) {
+            Circle ci = new Circle(6);
+            ci.setFill(Color.web(EMPTY_PEG));
+            ci.setStroke(Color.web("#444466")); ci.setStrokeWidth(1);
+            g.add(ci, c, r);
+        }
+        return g;
     }
 
     /**
-     * Zeigt die Willkommensnachricht und Spielregeln an.
+     * Ausgefülltes 2x2 Feedback-Grid.
+     * • = schwarzer Peg (richtige Position)
+     * o = weißer Peg (falsche Position)
      */
-    public void displayWelcome() {
-        System.out.println("╔══════════════════════════════════════╗");
-        System.out.println("║          M A S T E R M I N D         ║");
-        System.out.println("╚══════════════════════════════════════╝");
-        System.out.println();
-        System.out.println("Erlaubte Farben: R  G  B  Y  O  P");
-        System.out.println("                 Rot Grün Blau Gelb Orange Pink");
-        System.out.println("Versuche:        " + MastermindModel.MAX_ATTEMPTS);
-        System.out.println("Code-Länge:      " + MastermindModel.CODE_LENGTH + " Farben (Wiederholungen erlaubt)");
-        System.out.println("• = richtige Farbe, richtige Position");
-        System.out.println("o = richtige Farbe, falsche Position");
-        System.out.println("════════════════════════════════════════");
-        System.out.println();
+    private GridPane makeFilledFeedback(String result) {
+        GridPane g = new GridPane();
+        g.setHgap(4); g.setVgap(4);
+        g.setPadding(new Insets(0, 0, 0, 8));
+        int idx = 0;
+        for (int r = 0; r < 2; r++) {
+            for (int c = 0; c < 2; c++) {
+                Circle ci = new Circle(6);
+                if (idx < result.length()) {
+                    char fb = result.charAt(idx);
+                    if (fb == '•') {
+                        ci.setFill(Color.web("#111111"));
+                        ci.setStroke(Color.web("#999999")); ci.setStrokeWidth(1);
+                    } else if (fb == 'o') {
+                        ci.setFill(Color.web("#EEEEEE"));
+                        ci.setStroke(Color.web("#AAAAAA")); ci.setStrokeWidth(1);
+                    } else {
+                        ci.setFill(Color.web(EMPTY_PEG));
+                    }
+                } else {
+                    ci.setFill(Color.web(EMPTY_PEG));
+                    ci.setStroke(Color.web("#444466")); ci.setStrokeWidth(1);
+                }
+                g.add(ci, c, r); idx++;
+            }
+        }
+        return g;
     }
 
+    /** Erstellt einen Farb-Auswahl-Button. */
+    private Button makeColorButton(char colorChar) {
+        Circle circle = new Circle(19);
+        circle.setFill(colorFor(colorChar));
+        circle.setStroke(Color.web("#FFFFFF", 0.3));
+        circle.setStrokeWidth(2);
+
+        Label lbl = new Label(String.valueOf(colorChar));
+        lbl.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
+        lbl.setStyle("-fx-text-fill: white;");
+        lbl.setMouseTransparent(true);
+
+        StackPane stack = new StackPane(circle, lbl);
+        Button btn = new Button();
+        btn.setGraphic(stack);
+        btn.setStyle("-fx-background-color: transparent; -fx-padding: 4; -fx-cursor: hand;");
+        btn.setOnMouseEntered(e -> circle.setOpacity(0.75));
+        btn.setOnMouseExited(e -> circle.setOpacity(1.0));
+        btn.setOnAction(e -> { if (onColorSelected != null) onColorSelected.accept(colorChar); });
+        btn.setTooltip(new Tooltip(colorName(colorChar)));
+        return btn;
+    }
+
+    // ── Öffentliche Update-Methoden ────────────────────────────────────────
+
     /**
-     * Zeigt alle bisherigen Versuche mit ihrer Auswertung tabellarisch an.
-     * Ähnlich wie im Original-Mastermind-Brettspiel.
-     *
-     * @param model Das Modell mit der History aller Versuche
+     * Aktualisiert das gesamte Spielfeld nach einem Versuch.
      */
-    public void displayBoard(MastermindModel model) {
+    public void updateBoard(MastermindModel model) {
         int attempts = model.getCurrentAttempt();
-        char[][] guessHistory = model.getGuessHistory();
-        String[] resultHistory = model.getResultHistory();
-
-        System.out.println();
-        System.out.println("  #  │ Versuch │ Auswertung");
-        System.out.println("─────┼─────────┼───────────");
-
+        boardContainer.getChildren().clear();
         for (int i = 0; i < attempts; i++) {
-            // Versuchsnummer (1-basiert), linksbündig formatiert
-            System.out.printf("  %-2d │ ", i + 1);
-
-            // Die 4 Farbbuchstaben des Versuchs mit Leerzeichen
-            for (char c : guessHistory[i]) {
-                System.out.print(c + " ");
-            }
-
-            // Auswertung (• und o), oder "-" wenn keine Treffer
-            String result = resultHistory[i];
-            System.out.print("│ ");
-            if (result == null || result.isEmpty()) {
-                System.out.println("-");
-            } else {
-                System.out.println(result);
-            }
+            boardContainer.getChildren().add(
+                    buildFilledRow(i + 1, model.getGuessHistory()[i], model.getResultHistory()[i])
+            );
         }
-
-        System.out.println("─────┴─────────┴───────────");
-        System.out.println();
+        for (int i = attempts; i < MastermindModel.MAX_ATTEMPTS; i++) {
+            boardContainer.getChildren().add(buildEmptyRow(i + 1));
+        }
+        remainingLabel.setText("Verbleibende Versuche: " + model.getRemainingAttempts());
     }
 
     /**
-     * Zeigt die Anzahl der verbleibenden Versuche an.
-     *
-     * @param remaining Anzahl der verbleibenden Versuche
+     * Aktualisiert die 4 Slots des aktuellen Versuchs.
      */
-    public void displayRemainingAttempts(int remaining) {
-        System.out.println("Verbleibende Versuche: " + remaining);
-    }
-
-    /**
-     * Liest eine gültige Farbeingabe vom Spieler ein.
-     * Wiederholt die Aufforderung solange bis eine gültige Eingabe kommt.
-     * Gültig = 4 Zeichen, alle aus {R, G, B, Y, O, P}.
-     *
-     * @param model Das Modell zur Validierung der Eingabe
-     * @return Die gültige Eingabe als uppercase String (z.B. "RGBY")
-     */
-    public String readInput(MastermindModel model) {
-        String input;
-
-        while (true) {
-            System.out.print("Dein Versuch (z.B. RGBY): ");
-            input = scanner.nextLine().trim().toUpperCase();
-
-            // Modell prüft ob die Eingabe gültig ist
-            if (model.isValidInput(input)) {
-                return input;  // gültige Eingabe → zurückgeben
-            }
-
-            // Ungültige Eingabe → Fehlermeldung und nochmal fragen
-            System.out.println("  ✗ Ungültige Eingabe! Bitte genau 4 Buchstaben aus: R G B Y O P");
+    public void updateCurrentGuess(char[] currentGuess, int filledSlots) {
+        currentGuessDisplay.getChildren().clear();
+        for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) {
+            currentGuessDisplay.getChildren().add(
+                    i < filledSlots ? makePeg(currentGuess[i]) : makePeg(null)
+            );
         }
     }
 
-    /**
-     * Zeigt eine Gewinnnachricht an.
-     *
-     * @param attempts Anzahl der benötigten Versuche
-     */
-    public void displayWin(int attempts) {
-        System.out.println();
-        System.out.println("╔══════════════════════════════════════╗");
-        System.out.println("║   🎉  GEWONNEN! Herzlichen Glückwunsch!  ║");
-        System.out.println("╚══════════════════════════════════════╝");
-        System.out.println("Du hast den Code in " + attempts + " Versuch(en) erraten!");
-        System.out.println();
+    /** Zeigt Gewinn-Dialog. */
+    public void showWinAlert(int attempts) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Gewonnen!");
+        a.setHeaderText("Herzlichen Glückwunsch!");
+        a.setContentText("Du hast den Code in " + attempts + " Versuch(en) erraten!");
+        a.showAndWait();
     }
 
-    /**
-     * Zeigt eine Verlustnachricht mit dem aufgelösten Code an.
-     *
-     * @param secretCode Der geheime Code (wird am Ende aufgedeckt)
-     */
-    public void displayLoss(String secretCode) {
-        System.out.println();
-        System.out.println("╔══════════════════════════════════════╗");
-        System.out.println("║   ✗  UNENTSCHIEDEN – Versuche aufgebraucht  ║");
-        System.out.println("╚══════════════════════════════════════╝");
-        System.out.println("Der geheime Code war: " + secretCode);
-        System.out.println();
+    /** Zeigt Verlust-Dialog mit aufgedecktem Code. */
+    public void showLossAlert(String secretCode) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setTitle("Unentschieden");
+        a.setHeaderText("Alle Versuche aufgebraucht!");
+        a.setContentText("Der geheime Code war: " + secretCode);
+        a.showAndWait();
     }
 
-    /**
-     * Schließt den Scanner am Ende des Programms.
-     * Sollte immer aufgerufen werden wenn das Spiel endet.
-     */
-    public void close() {
-        scanner.close();
+    /** Deaktiviert Eingabe wenn das Spiel vorbei ist. */
+    public void disableInput() {
+        submitButton.setDisable(true);
+        deleteButton.setDisable(true);
     }
+
+    // ── Farb-Hilfsmethoden ─────────────────────────────────────────────────
+
+    private Color colorFor(char c) {
+        switch (c) {
+            case 'R': return Color.web("#E74C3C");
+            case 'G': return Color.web("#27AE60");
+            case 'B': return Color.web("#2980B9");
+            case 'Y': return Color.web("#F1C40F");
+            case 'O': return Color.web("#E67E22");
+            case 'P': return Color.web("#FF69B4");
+            default:  return Color.web(EMPTY_PEG);
+        }
+    }
+
+    private String colorName(char c) {
+        switch (c) {
+            case 'R': return "Rot";   case 'G': return "Grün";
+            case 'B': return "Blau";  case 'Y': return "Gelb";
+            case 'O': return "Orange"; case 'P': return "Pink";
+            default: return "?";
+        }
+    }
+
+    // ── Callback-Setter ────────────────────────────────────────────────────
+
+    public void setOnColorSelected(Consumer<Character> h) { this.onColorSelected = h; }
+    public void setOnSubmit(Runnable h)                   { this.onSubmit = h; }
+    public void setOnDelete(Runnable h)                   { this.onDelete = h; }
 }
