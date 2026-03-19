@@ -1,93 +1,97 @@
 package com.example.mastermind;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 /**
- * CONTROLLER – steuert den Spielablauf.
- * Verbindet Model und View: hört auf View-Events, aktualisiert Model, aktualisiert View.
- * Enthält selbst keine Logik und keine Ausgaben.
+ * CONTROLLER - steuert den Spielablauf.
+ * Verwaltet auch den Timer (JavaFX Timeline).
  */
 public class MastermindController {
 
     private final MastermindModel model;
-    private final MastermindView view;
-    private final Stage stage;
+    private final MastermindView  view;
+    private final Stage           stage;
+    private final String          playerName;
 
-    // Der aktuell eingegebene Versuch (wird Slot für Slot befüllt)
     private final char[] currentGuess = new char[MastermindModel.CODE_LENGTH];
-
-    // Wie viele Slots bereits befüllt sind (0–4)
     private int filledSlots = 0;
 
-    /**
-     * Konstruktor – erhält alle drei Abhängigkeiten von HelloApplication.
-     */
-    public MastermindController(MastermindModel model, MastermindView view, Stage stage) {
-        this.model = model;
-        this.view  = view;
-        this.stage = stage;
+    // Timer - zaehlt Sekunden seit Spielstart
+    private Timeline timer;
+    private long     elapsedSeconds = 0;
+
+    public MastermindController(MastermindModel model, MastermindView view,
+                                Stage stage, String playerName) {
+        this.model      = model;
+        this.view       = view;
+        this.stage      = stage;
+        this.playerName = playerName;
     }
 
-    /**
-     * Startet das Spiel:
-     * 1. Szene aus der View holen
-     * 2. Event-Handler auf View-Buttons setzen
-     * 3. Stage anzeigen
-     */
     public void run() {
-        // Szene bauen
-        javafx.scene.Scene scene = view.buildScene();
+        // Szene aufbauen (mit Spielername und Versuchsanzahl)
+        javafx.scene.Scene scene = view.buildScene(playerName, model.getMaxAttempts());
 
-        // ── Callback: Spieler wählt eine Farbe ────────────────────────────
+        // ── Timer starten ──────────────────────────────────────────────────
+        // JavaFX Timeline: jede Sekunde wird elapsedSeconds erhoeht
+        // und der Timer-Label in der View aktualisiert
+        timer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
+            elapsedSeconds++;
+            view.updateTimer(elapsedSeconds);
+        }));
+        timer.setCycleCount(Timeline.INDEFINITE); // laeuft endlos bis gestoppt
+        timer.play();
+
+        // ── Farbe gewaehlt ─────────────────────────────────────────────────
         view.setOnColorSelected(colorChar -> {
-            // Nur wenn noch Slots frei und Spiel noch läuft
-            if (filledSlots < MastermindModel.CODE_LENGTH && !model.isGameWon() && !model.isGameOver()) {
+            if (filledSlots < MastermindModel.CODE_LENGTH
+                    && !model.isGameWon() && !model.isGameOver()) {
                 currentGuess[filledSlots] = colorChar;
                 filledSlots++;
-                // View aktualisieren: zeige aktuelle Farbauswahl in den 4 Slots
                 view.updateCurrentGuess(currentGuess, filledSlots);
             }
         });
 
-        // ── Callback: Spieler drückt "Löschen" ────────────────────────────
+        // ── Loeschen gedrueckt ─────────────────────────────────────────────
         view.setOnDelete(() -> {
             if (filledSlots > 0) {
                 filledSlots--;
-                currentGuess[filledSlots] = 0; // Slot leeren
+                currentGuess[filledSlots] = 0;
                 view.updateCurrentGuess(currentGuess, filledSlots);
             }
         });
 
-        // ── Callback: Spieler drückt "Abschicken" ─────────────────────────
+        // ── Abschicken gedrueckt ───────────────────────────────────────────
         view.setOnSubmit(() -> {
-            // Nur abschicken wenn alle 4 Slots gefüllt und Spiel noch läuft
             if (filledSlots < MastermindModel.CODE_LENGTH) return;
             if (model.isGameWon() || model.isGameOver()) return;
 
-            // Versuch als String zusammenbauen und im Model verarbeiten
-            String guess = new String(currentGuess);
-            model.processGuess(guess);
-
-            // Spielfeld in der View aktualisieren
+            model.processGuess(new String(currentGuess));
             view.updateBoard(model);
 
-            // Aktuelle Eingabe zurücksetzen
+            // Eingabe zuruecksetzen
             filledSlots = 0;
             for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) currentGuess[i] = 0;
             view.updateCurrentGuess(currentGuess, filledSlots);
 
-            // Spielende prüfen
+            // Spielende pruefen
             if (model.isGameWon()) {
+                timer.stop();           // Timer anhalten
+                view.stopTimer();       // Timer grau faerben
                 view.disableInput();
-                view.showWinAlert(model.getCurrentAttempt());
+                view.showWinAlert(playerName, model.getCurrentAttempt(), elapsedSeconds);
             } else if (model.isGameOver()) {
+                timer.stop();
+                view.stopTimer();
                 view.disableInput();
-                view.showLossAlert(model.getSecretCodeAsString());
+                view.showLossAlert(playerName, model.getSecretCodeAsString(), elapsedSeconds);
             }
         });
 
-        // Stage konfigurieren und anzeigen
-        stage.setTitle("Mastermind");
+        stage.setTitle("Mastermind – " + playerName);
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();

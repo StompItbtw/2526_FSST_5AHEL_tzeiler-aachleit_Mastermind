@@ -17,9 +17,8 @@ import javafx.scene.text.FontWeight;
 import java.util.function.Consumer;
 
 /**
- * VIEW - baut die gesamte JavaFX-Benutzeroberflaeche.
- * Enthaelt keine Spiellogik - nur Darstellung und Eingabe.
- * Kommuniziert mit dem Controller ueber Callback-Funktionen.
+ * VIEW - baut die JavaFX-Spieloberflaeche.
+ * Zeigt Spielername, Timer und Spielfeld an.
  */
 public class MastermindView {
 
@@ -30,9 +29,11 @@ public class MastermindView {
     private static final String ACCENT    = "#7B68EE";
     private static final String EMPTY_PEG = "#333355";
 
-    private VBox  boardContainer;
-    private HBox  currentGuessDisplay;
-    private Label remainingLabel;
+    private VBox   boardContainer;
+    private HBox   currentGuessDisplay;
+    private Label  remainingLabel;
+    private Label  timerLabel;      // Zeigt die laufende Zeit
+    private Label  playerNameLabel; // Zeigt den Spielernamen
     private Button submitButton;
     private Button deleteButton;
 
@@ -40,22 +41,27 @@ public class MastermindView {
     private Runnable onSubmit;
     private Runnable onDelete;
 
-    /** Baut die komplette JavaFX-Szene und gibt sie zurueck. */
-    public Scene buildScene() {
+    /**
+     * Baut die Spielszene.
+     *
+     * @param playerName   Name des Spielers (vom Startbildschirm)
+     * @param maxAttempts  Anzahl der Versuche (vom Startbildschirm)
+     */
+    public Scene buildScene(String playerName, int maxAttempts) {
         VBox root = new VBox(0);
         root.setStyle("-fx-background-color: " + BG_DARK + ";");
-        root.getChildren().add(buildTitleArea());
+        root.getChildren().add(buildTitleArea(playerName));
 
         boardContainer = new VBox(6);
         boardContainer.setPadding(new Insets(10, 20, 10, 20));
         boardContainer.setStyle("-fx-background-color: " + BG_DARK + ";");
-        for (int i = 0; i < MastermindModel.MAX_ATTEMPTS; i++) {
+        for (int i = 0; i < maxAttempts; i++) {
             boardContainer.getChildren().add(buildEmptyRow(i + 1));
         }
 
         ScrollPane scroll = new ScrollPane(boardContainer);
         scroll.setFitToWidth(true);
-        scroll.setPrefHeight(400);
+        scroll.setPrefHeight(380);
         scroll.setStyle(
                 "-fx-background: " + BG_DARK + ";" +
                         "-fx-background-color: " + BG_DARK + ";" +
@@ -63,44 +69,58 @@ public class MastermindView {
         );
         VBox.setVgrow(scroll, Priority.ALWAYS);
 
-        root.getChildren().addAll(scroll, buildBottomPanel());
-        return new Scene(root, 480, 700);
+        root.getChildren().addAll(scroll, buildBottomPanel(maxAttempts));
+        return new Scene(root, 480, 720);
     }
 
-    private VBox buildTitleArea() {
+    /**
+     * Baut den Titel-Bereich mit Spielername und Timer.
+     */
+    private VBox buildTitleArea(String playerName) {
         VBox area = new VBox(4);
         area.setAlignment(Pos.CENTER);
-        area.setPadding(new Insets(18, 0, 14, 0));
+        area.setPadding(new Insets(14, 16, 12, 16));
         area.setStyle("-fx-background-color: " + BG_PANEL + ";");
 
         Label title = new Label("MASTERMIND");
-        title.setFont(Font.font("Monospace", FontWeight.BOLD, 26));
+        title.setFont(Font.font("Monospace", FontWeight.BOLD, 24));
         title.setStyle("-fx-text-fill: " + ACCENT + ";");
 
-        Label sub = new Label("Errate den 4-farbigen Code in 10 Versuchen");
-        sub.setFont(Font.font("Monospace", 12));
-        sub.setStyle("-fx-text-fill: #8888AA;");
+        // Spielername und Timer nebeneinander
+        HBox infoBar = new HBox(0);
+        infoBar.setAlignment(Pos.CENTER);
 
+        playerNameLabel = new Label("Spieler: " + playerName);
+        playerNameLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
+        playerNameLabel.setStyle("-fx-text-fill: #AAAACC;");
+        HBox.setHgrow(playerNameLabel, Priority.ALWAYS);
+
+        timerLabel = new Label("Zeit: 00:00");
+        timerLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
+        timerLabel.setStyle("-fx-text-fill: #7BC67B;"); // Gruen fuer Timer
+        HBox.setHgrow(timerLabel, Priority.ALWAYS);
+        timerLabel.setAlignment(Pos.CENTER_RIGHT);
+
+        infoBar.getChildren().addAll(playerNameLabel, timerLabel);
+        infoBar.setPadding(new Insets(6, 0, 4, 0));
+
+        // Legende mit echten Kreisen
         HBox legend = new HBox(20);
         legend.setAlignment(Pos.CENTER);
-        legend.setPadding(new Insets(8, 0, 0, 0));
+        legend.setPadding(new Insets(6, 0, 0, 0));
 
-// Schwarzer Kreis = richtige Position
         Circle blackPeg = new Circle(7);
         blackPeg.setFill(Color.web("#111111"));
-        blackPeg.setStroke(Color.web("#999999"));
-        blackPeg.setStrokeWidth(1);
+        blackPeg.setStroke(Color.web("#999999")); blackPeg.setStrokeWidth(1);
         Label exactLbl = new Label("= richtige Position");
         exactLbl.setFont(Font.font("Monospace", 11));
         exactLbl.setStyle("-fx-text-fill: #CCCCCC;");
         HBox exactBox = new HBox(6, blackPeg, exactLbl);
         exactBox.setAlignment(Pos.CENTER_LEFT);
 
-// Weisser Kreis = falsche Position
         Circle whitePeg = new Circle(7);
         whitePeg.setFill(Color.web("#EEEEEE"));
-        whitePeg.setStroke(Color.web("#AAAAAA"));
-        whitePeg.setStrokeWidth(1);
+        whitePeg.setStroke(Color.web("#AAAAAA")); whitePeg.setStrokeWidth(1);
         Label colorLbl = new Label("= falsche Position");
         colorLbl.setFont(Font.font("Monospace", 11));
         colorLbl.setStyle("-fx-text-fill: #CCCCCC;");
@@ -108,7 +128,8 @@ public class MastermindView {
         colorBox.setAlignment(Pos.CENTER_LEFT);
 
         legend.getChildren().addAll(exactBox, colorBox);
-        area.getChildren().addAll(title, sub, legend);
+
+        area.getChildren().addAll(title, infoBar, legend);
         return area;
     }
 
@@ -118,8 +139,7 @@ public class MastermindView {
         row.setPadding(new Insets(7, 14, 7, 14));
         row.setStyle(
                 "-fx-background-color: " + BG_ROW + ";" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-opacity: 0.35;"
+                        "-fx-background-radius: 8; -fx-opacity: 0.35;"
         );
         Label num = new Label(String.format("%2d", rowNumber));
         num.setMinWidth(22);
@@ -157,7 +177,7 @@ public class MastermindView {
         return row;
     }
 
-    private VBox buildBottomPanel() {
+    private VBox buildBottomPanel(int maxAttempts) {
         VBox panel = new VBox(12);
         panel.setPadding(new Insets(14, 20, 18, 20));
         panel.setStyle(
@@ -175,7 +195,7 @@ public class MastermindView {
             currentGuessDisplay.getChildren().add(makePeg(null));
         }
 
-        remainingLabel = new Label("Verbleibende Versuche: " + MastermindModel.MAX_ATTEMPTS);
+        remainingLabel = new Label("Verbleibende Versuche: " + maxAttempts);
         remainingLabel.setFont(Font.font("Monospace", 12));
         remainingLabel.setStyle("-fx-text-fill: #8888AA;");
 
@@ -218,18 +238,16 @@ public class MastermindView {
         return panel;
     }
 
-    // ── Peg / Feedback Hilfsmethoden ──────────────────────────────────────
+    // ── Peg / Feedback ──────────────────────────────────────────────────────
 
     private Circle makePeg(Character c) {
         Circle circle = new Circle(17);
         if (c == null) {
             circle.setFill(Color.web(EMPTY_PEG));
-            circle.setStroke(Color.web("#444466"));
-            circle.setStrokeWidth(1.5);
+            circle.setStroke(Color.web("#444466")); circle.setStrokeWidth(1.5);
         } else {
             circle.setFill(colorFor(c));
-            circle.setStroke(Color.web("#FFFFFF", 0.2));
-            circle.setStrokeWidth(1.5);
+            circle.setStroke(Color.web("#FFFFFF", 0.2)); circle.setStrokeWidth(1.5);
         }
         return circle;
     }
@@ -247,11 +265,6 @@ public class MastermindView {
         return g;
     }
 
-    /**
-     * Ausgefuelltes 2x2 Feedback-Grid.
-     * MastermindModel.EXACT_CHAR ('*') = schwarzer Peg = richtige Position
-     * MastermindModel.COLOR_CHAR ('o') = weisser Peg  = falsche Position
-     */
     private GridPane makeFilledFeedback(String result) {
         GridPane g = new GridPane();
         g.setHgap(4); g.setVgap(4);
@@ -263,11 +276,9 @@ public class MastermindView {
                 if (idx < result.length()) {
                     char fb = result.charAt(idx);
                     if (fb == MastermindModel.EXACT_CHAR) {
-                        // Schwarzer Peg = richtige Farbe, richtige Position
                         ci.setFill(Color.web("#111111"));
                         ci.setStroke(Color.web("#999999")); ci.setStrokeWidth(1);
                     } else if (fb == MastermindModel.COLOR_CHAR) {
-                        // Weisser Peg = richtige Farbe, falsche Position
                         ci.setFill(Color.web("#EEEEEE"));
                         ci.setStroke(Color.web("#AAAAAA")); ci.setStrokeWidth(1);
                     } else {
@@ -286,8 +297,7 @@ public class MastermindView {
     private Button makeColorButton(char colorChar) {
         Circle circle = new Circle(19);
         circle.setFill(colorFor(colorChar));
-        circle.setStroke(Color.web("#FFFFFF", 0.3));
-        circle.setStrokeWidth(2);
+        circle.setStroke(Color.web("#FFFFFF", 0.3)); circle.setStrokeWidth(2);
 
         Label lbl = new Label(String.valueOf(colorChar));
         lbl.setFont(Font.font("Monospace", FontWeight.BOLD, 12));
@@ -307,7 +317,6 @@ public class MastermindView {
 
     // ── Oeffentliche Update-Methoden ──────────────────────────────────────
 
-    /** Aktualisiert das gesamte Spielfeld nach einem Versuch. */
     public void updateBoard(MastermindModel model) {
         int attempts = model.getCurrentAttempt();
         boardContainer.getChildren().clear();
@@ -316,13 +325,12 @@ public class MastermindView {
                     buildFilledRow(i + 1, model.getGuessHistory()[i], model.getResultHistory()[i])
             );
         }
-        for (int i = attempts; i < MastermindModel.MAX_ATTEMPTS; i++) {
+        for (int i = attempts; i < model.getMaxAttempts(); i++) {
             boardContainer.getChildren().add(buildEmptyRow(i + 1));
         }
         remainingLabel.setText("Verbleibende Versuche: " + model.getRemainingAttempts());
     }
 
-    /** Aktualisiert die 4 Slots des aktuellen Versuchs. */
     public void updateCurrentGuess(char[] currentGuess, int filledSlots) {
         currentGuessDisplay.getChildren().clear();
         for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) {
@@ -332,19 +340,53 @@ public class MastermindView {
         }
     }
 
-    public void showWinAlert(int attempts) {
+    /**
+     * Aktualisiert den Timer-Label.
+     * Wird vom Controller jede Sekunde aufgerufen.
+     *
+     * @param seconds Vergangene Sekunden seit Spielstart
+     */
+    public void updateTimer(long seconds) {
+        long min = seconds / 60;
+        long sec = seconds % 60;
+        String timeStr = String.format("Zeit: %02d:%02d", min, sec);
+        timerLabel.setText(timeStr);
+
+        // Timer wird rot wenn weniger als 10 Sekunden (optional als Warnung)
+        // Hier nur als Info - kein Zeitlimit
+        timerLabel.setStyle("-fx-text-fill: #7BC67B;");
+    }
+
+    /**
+     * Stoppt die Timer-Anzeige (Farbe grau nach Spielende).
+     */
+    public void stopTimer() {
+        timerLabel.setStyle("-fx-text-fill: #8888AA;");
+    }
+
+    public void showWinAlert(String playerName, int attempts, long seconds) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Gewonnen!");
-        a.setHeaderText("Herzlichen Glueckwunsch!");
-        a.setContentText("Du hast den Code in " + attempts + " Versuch(en) erraten!");
+        a.setHeaderText("Herzlichen Glueckwunsch, " + playerName + "!");
+        long min = seconds / 60;
+        long sec = seconds % 60;
+        a.setContentText(
+                "Code erraten in " + attempts + " Versuch(en)!\n" +
+                        "Benoetigt: " + String.format("%02d:%02d", min, sec)
+        );
         a.showAndWait();
     }
 
-    public void showLossAlert(String secretCode) {
+    public void showLossAlert(String playerName, String secretCode, long seconds) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Unentschieden");
-        a.setHeaderText("Alle Versuche aufgebraucht!");
-        a.setContentText("Der geheime Code war: " + secretCode);
+        a.setHeaderText("Alle Versuche aufgebraucht, " + playerName + "!");
+        long min = seconds / 60;
+        long sec = seconds % 60;
+        a.setContentText(
+                "Der geheime Code war: " + secretCode + "\n" +
+                        "Gespielte Zeit: " + String.format("%02d:%02d", min, sec)
+        );
         a.showAndWait();
     }
 
