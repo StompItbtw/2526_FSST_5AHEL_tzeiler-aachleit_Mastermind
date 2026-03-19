@@ -17,42 +17,35 @@ import javafx.scene.text.FontWeight;
 import java.util.function.Consumer;
 
 /**
- * VIEW – baut die gesamte JavaFX-Benutzeroberfläche.
- * Enthält keine Spiellogik – nur Darstellung und Eingabe.
- * Kommuniziert mit dem Controller über Callback-Funktionen.
+ * VIEW - baut die gesamte JavaFX-Benutzeroberflaeche.
+ * Enthaelt keine Spiellogik - nur Darstellung und Eingabe.
+ * Kommuniziert mit dem Controller ueber Callback-Funktionen.
  */
 public class MastermindView {
 
-    // ── Farben für die Spieloberfläche ─────────────────────────────────────
-    private static final String BG_DARK    = "#1C1C2E";
-    private static final String BG_ROW     = "#252540";
-    private static final String BG_PANEL   = "#16213E";
-    private static final String COLOR_TEXT = "#E0E0FF";
-    private static final String ACCENT     = "#7B68EE";
-    private static final String EMPTY_PEG  = "#333355";
+    private static final String BG_DARK   = "#1C1C2E";
+    private static final String BG_ROW    = "#252540";
+    private static final String BG_PANEL  = "#16213E";
+    private static final String COLOR_TEXT= "#E0E0FF";
+    private static final String ACCENT    = "#7B68EE";
+    private static final String EMPTY_PEG = "#333355";
 
-    // ── UI-Komponenten ──────────────────────────────────────────────────────
-    private VBox boardContainer;       // Spielfeld mit allen Versuchen
-    private HBox currentGuessDisplay;  // 4 Slots für aktuellen Versuch
-    private Label remainingLabel;      // Verbleibende Versuche
+    private VBox  boardContainer;
+    private HBox  currentGuessDisplay;
+    private Label remainingLabel;
     private Button submitButton;
     private Button deleteButton;
 
-    // ── Callbacks – werden vom Controller gesetzt ──────────────────────────
     private Consumer<Character> onColorSelected;
     private Runnable onSubmit;
     private Runnable onDelete;
 
-    /**
-     * Baut die komplette JavaFX-Szene und gibt sie zurück.
-     */
+    /** Baut die komplette JavaFX-Szene und gibt sie zurueck. */
     public Scene buildScene() {
         VBox root = new VBox(0);
         root.setStyle("-fx-background-color: " + BG_DARK + ";");
-
         root.getChildren().add(buildTitleArea());
 
-        // Spielfeld
         boardContainer = new VBox(6);
         boardContainer.setPadding(new Insets(10, 20, 10, 20));
         boardContainer.setStyle("-fx-background-color: " + BG_DARK + ";");
@@ -60,24 +53,20 @@ public class MastermindView {
             boardContainer.getChildren().add(buildEmptyRow(i + 1));
         }
 
-        ScrollPane scrollPane = new ScrollPane(boardContainer);
-        scrollPane.setFitToWidth(true);
-        scrollPane.setPrefHeight(400);
-        scrollPane.setStyle(
+        ScrollPane scroll = new ScrollPane(boardContainer);
+        scroll.setFitToWidth(true);
+        scroll.setPrefHeight(400);
+        scroll.setStyle(
                 "-fx-background: " + BG_DARK + ";" +
                         "-fx-background-color: " + BG_DARK + ";" +
                         "-fx-border-color: transparent;"
         );
-        VBox.setVgrow(scrollPane, Priority.ALWAYS);
+        VBox.setVgrow(scroll, Priority.ALWAYS);
 
-        root.getChildren().addAll(scrollPane, buildBottomPanel());
-
+        root.getChildren().addAll(scroll, buildBottomPanel());
         return new Scene(root, 480, 700);
     }
 
-    // ── Layout-Methoden ────────────────────────────────────────────────────
-
-    /** Baut den Titel oben. */
     private VBox buildTitleArea() {
         VBox area = new VBox(4);
         area.setAlignment(Pos.CENTER);
@@ -92,25 +81,37 @@ public class MastermindView {
         sub.setFont(Font.font("Monospace", 12));
         sub.setStyle("-fx-text-fill: #8888AA;");
 
-        // Legende
         HBox legend = new HBox(20);
         legend.setAlignment(Pos.CENTER);
-        legend.setPadding(new Insets(6, 0, 0, 0));
+        legend.setPadding(new Insets(8, 0, 0, 0));
 
-        Label blackLegend = new Label("* = richtige Position");
-        blackLegend.setFont(Font.font("Monospace", 11));
-        blackLegend.setStyle("-fx-text-fill: #CCCCCC;");
+// Schwarzer Kreis = richtige Position
+        Circle blackPeg = new Circle(7);
+        blackPeg.setFill(Color.web("#111111"));
+        blackPeg.setStroke(Color.web("#999999"));
+        blackPeg.setStrokeWidth(1);
+        Label exactLbl = new Label("= richtige Position");
+        exactLbl.setFont(Font.font("Monospace", 11));
+        exactLbl.setStyle("-fx-text-fill: #CCCCCC;");
+        HBox exactBox = new HBox(6, blackPeg, exactLbl);
+        exactBox.setAlignment(Pos.CENTER_LEFT);
 
-        Label whiteLegend = new Label("○ = falsche Position");
-        whiteLegend.setFont(Font.font("Monospace", 11));
-        whiteLegend.setStyle("-fx-text-fill: #CCCCCC;");
+// Weisser Kreis = falsche Position
+        Circle whitePeg = new Circle(7);
+        whitePeg.setFill(Color.web("#EEEEEE"));
+        whitePeg.setStroke(Color.web("#AAAAAA"));
+        whitePeg.setStrokeWidth(1);
+        Label colorLbl = new Label("= falsche Position");
+        colorLbl.setFont(Font.font("Monospace", 11));
+        colorLbl.setStyle("-fx-text-fill: #CCCCCC;");
+        HBox colorBox = new HBox(6, whitePeg, colorLbl);
+        colorBox.setAlignment(Pos.CENTER_LEFT);
 
-        legend.getChildren().addAll(blackLegend, whiteLegend);
+        legend.getChildren().addAll(exactBox, colorBox);
         area.getChildren().addAll(title, sub, legend);
         return area;
     }
 
-    /** Baut eine leere Platzhalter-Zeile. */
     private HBox buildEmptyRow(int rowNumber) {
         HBox row = new HBox(10);
         row.setAlignment(Pos.CENTER_LEFT);
@@ -120,16 +121,13 @@ public class MastermindView {
                         "-fx-background-radius: 8;" +
                         "-fx-opacity: 0.35;"
         );
-
         Label num = new Label(String.format("%2d", rowNumber));
         num.setMinWidth(22);
         num.setFont(Font.font("Monospace", 12));
         num.setStyle("-fx-text-fill: #555577;");
 
         HBox pegs = new HBox(8);
-        for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) {
-            pegs.getChildren().add(makePeg(null));
-        }
+        for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) pegs.getChildren().add(makePeg(null));
 
         Rectangle sep = new Rectangle(2, 28);
         sep.setFill(Color.web("#333355"));
@@ -138,15 +136,11 @@ public class MastermindView {
         return row;
     }
 
-    /** Baut eine ausgefüllte Zeile mit Farben und Feedback. */
     private HBox buildFilledRow(int rowNumber, char[] guess, String result) {
         HBox row = new HBox(10);
         row.setAlignment(Pos.CENTER_LEFT);
         row.setPadding(new Insets(7, 14, 7, 14));
-        row.setStyle(
-                "-fx-background-color: " + BG_ROW + ";" +
-                        "-fx-background-radius: 8;"
-        );
+        row.setStyle("-fx-background-color: " + BG_ROW + "; -fx-background-radius: 8;");
 
         Label num = new Label(String.format("%2d", rowNumber));
         num.setMinWidth(22);
@@ -154,9 +148,7 @@ public class MastermindView {
         num.setStyle("-fx-text-fill: #8888AA;");
 
         HBox pegs = new HBox(8);
-        for (char c : guess) {
-            pegs.getChildren().add(makePeg(c));
-        }
+        for (char c : guess) pegs.getChildren().add(makePeg(c));
 
         Rectangle sep = new Rectangle(2, 28);
         sep.setFill(Color.web("#444466"));
@@ -165,7 +157,6 @@ public class MastermindView {
         return row;
     }
 
-    /** Baut den unteren Eingabebereich. */
     private VBox buildBottomPanel() {
         VBox panel = new VBox(12);
         panel.setPadding(new Insets(14, 20, 18, 20));
@@ -174,7 +165,6 @@ public class MastermindView {
                         "-fx-border-color: #333355; -fx-border-width: 1 0 0 0;"
         );
 
-        // Aktueller Versuch
         Label guessTitle = new Label("Dein Versuch:");
         guessTitle.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
         guessTitle.setStyle("-fx-text-fill: " + COLOR_TEXT + ";");
@@ -189,61 +179,47 @@ public class MastermindView {
         remainingLabel.setFont(Font.font("Monospace", 12));
         remainingLabel.setStyle("-fx-text-fill: #8888AA;");
 
-        // Farb-Buttons
-        Label colorTitle = new Label("Farbe wählen:");
+        Label colorTitle = new Label("Farbe waehlen:");
         colorTitle.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
         colorTitle.setStyle("-fx-text-fill: " + COLOR_TEXT + ";");
 
         HBox colorBtns = new HBox(10);
         colorBtns.setAlignment(Pos.CENTER_LEFT);
-        for (char c : MastermindModel.ALLOWED_COLORS) {
-            colorBtns.getChildren().add(makeColorButton(c));
-        }
+        for (char c : MastermindModel.ALLOWED_COLORS) colorBtns.getChildren().add(makeColorButton(c));
 
-        // Steuer-Buttons
-        HBox ctrlBtns = new HBox(10);
-        ctrlBtns.setAlignment(Pos.CENTER_LEFT);
-
-        submitButton = new Button("✓  Abschicken");
+        submitButton = new Button("Abschicken");
         submitButton.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
         submitButton.setStyle(
-                "-fx-background-color: " + ACCENT + ";" +
-                        "-fx-text-fill: white;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 9 18 9 18;" +
-                        "-fx-cursor: hand;"
+                "-fx-background-color: " + ACCENT + "; -fx-text-fill: white;" +
+                        "-fx-background-radius: 8; -fx-padding: 9 18 9 18; -fx-cursor: hand;"
         );
         submitButton.setOnMouseEntered(e -> submitButton.setStyle(
-                "-fx-background-color: #9988FF;-fx-text-fill: white;" +
-                        "-fx-background-radius: 8;-fx-padding: 9 18 9 18;-fx-cursor: hand;"));
+                "-fx-background-color: #9988FF; -fx-text-fill: white;" +
+                        "-fx-background-radius: 8; -fx-padding: 9 18 9 18; -fx-cursor: hand;"));
         submitButton.setOnMouseExited(e -> submitButton.setStyle(
-                "-fx-background-color: " + ACCENT + ";-fx-text-fill: white;" +
-                        "-fx-background-radius: 8;-fx-padding: 9 18 9 18;-fx-cursor: hand;"));
+                "-fx-background-color: " + ACCENT + "; -fx-text-fill: white;" +
+                        "-fx-background-radius: 8; -fx-padding: 9 18 9 18; -fx-cursor: hand;"));
 
-        deleteButton = new Button("← Löschen");
+        deleteButton = new Button("Loeschen");
         deleteButton.setFont(Font.font("Monospace", 13));
         deleteButton.setStyle(
-                "-fx-background-color: #3A3A5C;" +
-                        "-fx-text-fill: " + COLOR_TEXT + ";" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 9 18 9 18;" +
-                        "-fx-cursor: hand;"
+                "-fx-background-color: #3A3A5C; -fx-text-fill: " + COLOR_TEXT + ";" +
+                        "-fx-background-radius: 8; -fx-padding: 9 18 9 18; -fx-cursor: hand;"
         );
 
         submitButton.setOnAction(e -> { if (onSubmit != null) onSubmit.run(); });
         deleteButton.setOnAction(e -> { if (onDelete != null) onDelete.run(); });
 
+        HBox ctrlBtns = new HBox(10);
         ctrlBtns.getChildren().addAll(submitButton, deleteButton);
-        panel.getChildren().addAll(
-                guessTitle, currentGuessDisplay, remainingLabel,
-                colorTitle, colorBtns, ctrlBtns
-        );
+
+        panel.getChildren().addAll(guessTitle, currentGuessDisplay, remainingLabel,
+                colorTitle, colorBtns, ctrlBtns);
         return panel;
     }
 
-    // ── Peg / Feedback Hilfsmethoden ───────────────────────────────────────
+    // ── Peg / Feedback Hilfsmethoden ──────────────────────────────────────
 
-    /** Erstellt einen Peg-Kreis. null = leerer Platzhalter. */
     private Circle makePeg(Character c) {
         Circle circle = new Circle(17);
         if (c == null) {
@@ -258,7 +234,6 @@ public class MastermindView {
         return circle;
     }
 
-    /** Leeres 2x2 Feedback-Grid. */
     private GridPane makeEmptyFeedback() {
         GridPane g = new GridPane();
         g.setHgap(4); g.setVgap(4);
@@ -273,9 +248,9 @@ public class MastermindView {
     }
 
     /**
-     * Ausgefülltes 2x2 Feedback-Grid.
-     * • = schwarzer Peg (richtige Position)
-     * o = weißer Peg (falsche Position)
+     * Ausgefuelltes 2x2 Feedback-Grid.
+     * MastermindModel.EXACT_CHAR ('*') = schwarzer Peg = richtige Position
+     * MastermindModel.COLOR_CHAR ('o') = weisser Peg  = falsche Position
      */
     private GridPane makeFilledFeedback(String result) {
         GridPane g = new GridPane();
@@ -287,10 +262,12 @@ public class MastermindView {
                 Circle ci = new Circle(6);
                 if (idx < result.length()) {
                     char fb = result.charAt(idx);
-                    if (fb == '*') {
+                    if (fb == MastermindModel.EXACT_CHAR) {
+                        // Schwarzer Peg = richtige Farbe, richtige Position
                         ci.setFill(Color.web("#111111"));
                         ci.setStroke(Color.web("#999999")); ci.setStrokeWidth(1);
-                    } else if (fb == 'o') {
+                    } else if (fb == MastermindModel.COLOR_CHAR) {
+                        // Weisser Peg = richtige Farbe, falsche Position
                         ci.setFill(Color.web("#EEEEEE"));
                         ci.setStroke(Color.web("#AAAAAA")); ci.setStrokeWidth(1);
                     } else {
@@ -306,7 +283,6 @@ public class MastermindView {
         return g;
     }
 
-    /** Erstellt einen Farb-Auswahl-Button. */
     private Button makeColorButton(char colorChar) {
         Circle circle = new Circle(19);
         circle.setFill(colorFor(colorChar));
@@ -323,17 +299,15 @@ public class MastermindView {
         btn.setGraphic(stack);
         btn.setStyle("-fx-background-color: transparent; -fx-padding: 4; -fx-cursor: hand;");
         btn.setOnMouseEntered(e -> circle.setOpacity(0.75));
-        btn.setOnMouseExited(e -> circle.setOpacity(1.0));
+        btn.setOnMouseExited(e  -> circle.setOpacity(1.0));
         btn.setOnAction(e -> { if (onColorSelected != null) onColorSelected.accept(colorChar); });
         btn.setTooltip(new Tooltip(colorName(colorChar)));
         return btn;
     }
 
-    // ── Öffentliche Update-Methoden ────────────────────────────────────────
+    // ── Oeffentliche Update-Methoden ──────────────────────────────────────
 
-    /**
-     * Aktualisiert das gesamte Spielfeld nach einem Versuch.
-     */
+    /** Aktualisiert das gesamte Spielfeld nach einem Versuch. */
     public void updateBoard(MastermindModel model) {
         int attempts = model.getCurrentAttempt();
         boardContainer.getChildren().clear();
@@ -348,9 +322,7 @@ public class MastermindView {
         remainingLabel.setText("Verbleibende Versuche: " + model.getRemainingAttempts());
     }
 
-    /**
-     * Aktualisiert die 4 Slots des aktuellen Versuchs.
-     */
+    /** Aktualisiert die 4 Slots des aktuellen Versuchs. */
     public void updateCurrentGuess(char[] currentGuess, int filledSlots) {
         currentGuessDisplay.getChildren().clear();
         for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) {
@@ -360,16 +332,14 @@ public class MastermindView {
         }
     }
 
-    /** Zeigt Gewinn-Dialog. */
     public void showWinAlert(int attempts) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Gewonnen!");
-        a.setHeaderText("Herzlichen Glückwunsch!");
+        a.setHeaderText("Herzlichen Glueckwunsch!");
         a.setContentText("Du hast den Code in " + attempts + " Versuch(en) erraten!");
         a.showAndWait();
     }
 
-    /** Zeigt Verlust-Dialog mit aufgedecktem Code. */
     public void showLossAlert(String secretCode) {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setTitle("Unentschieden");
@@ -378,13 +348,12 @@ public class MastermindView {
         a.showAndWait();
     }
 
-    /** Deaktiviert Eingabe wenn das Spiel vorbei ist. */
     public void disableInput() {
         submitButton.setDisable(true);
         deleteButton.setDisable(true);
     }
 
-    // ── Farb-Hilfsmethoden ─────────────────────────────────────────────────
+    // ── Farb-Hilfsmethoden ────────────────────────────────────────────────
 
     private Color colorFor(char c) {
         switch (c) {
@@ -400,14 +369,12 @@ public class MastermindView {
 
     private String colorName(char c) {
         switch (c) {
-            case 'R': return "Rot";   case 'G': return "Grün";
-            case 'B': return "Blau";  case 'Y': return "Gelb";
+            case 'R': return "Rot";    case 'G': return "Gruen";
+            case 'B': return "Blau";   case 'Y': return "Gelb";
             case 'O': return "Orange"; case 'P': return "Pink";
-            default: return "?";
+            default:  return "?";
         }
     }
-
-    // ── Callback-Setter ────────────────────────────────────────────────────
 
     public void setOnColorSelected(Consumer<Character> h) { this.onColorSelected = h; }
     public void setOnSubmit(Runnable h)                   { this.onSubmit = h; }
