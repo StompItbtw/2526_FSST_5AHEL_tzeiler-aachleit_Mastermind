@@ -54,5 +54,11 @@ Bild: Spiel
 füge mir jetzt diese aufgaben hinzu  
 Bild: Aufgabe
 
+mache mir diese aufgabe  
+Bild: Aufgabe Highscore speichern
+
+es soll auch nach dem beenden des programmas der highscore gespeichert werden, das heißt es muss alle neuen versuche in einer datei gespeichert werden, damit man sie immer abrufen kann, ralisiere mir das
+
+
 
 
