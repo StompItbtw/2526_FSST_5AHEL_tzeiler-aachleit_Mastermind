@@ -5,40 +5,58 @@ import javafx.stage.Stage;
 
 /**
  * HelloApplication - JavaFX-Einstiegspunkt.
- * Zeigt zuerst den Startbildschirm, dann das Spiel.
+ * Verwaltet Navigation: Startbildschirm → Spiel → Highscores → Startbildschirm
  */
 public class HelloApplication extends Application {
 
     @Override
     public void start(Stage stage) {
-        // ── 1. Startbildschirm anzeigen ────────────────────────────────────
+        showStartScreen(stage);
+    }
+
+    /**
+     * Zeigt den Startbildschirm an.
+     * Wird auch nach dem Spiel wieder aufgerufen (Neustart).
+     */
+    private void showStartScreen(Stage stage) {
         StartView startView = new StartView();
         javafx.scene.Scene startScene = startView.buildScene();
 
-        // ── 2. Wenn "Spiel starten" gedrueckt wird ─────────────────────────
+        // "Spiel starten" gedrueckt
         startView.setOnStart(() -> {
-            // Name und Versuchsanzahl aus dem Startbildschirm holen
             String playerName = startView.getPlayerName();
             int    attempts   = startView.getSelectedAttempts();
 
-            // Model mit gewaehlter Versuchsanzahl erstellen
-            MastermindModel model = new MastermindModel(attempts);
-
-            // View und Controller erstellen
+            MastermindModel      model      = new MastermindModel(attempts);
             MastermindView       view       = new MastermindView();
-            MastermindController controller = new MastermindController(
-                    model, view, stage, playerName
-            );
-
-            // Spiel starten (wechselt die Szene auf der Stage)
+            MastermindController controller = new MastermindController(model, view, stage, playerName);
             controller.run();
         });
 
-        // Startbildschirm anzeigen
+        // "Highscores anzeigen" gedrueckt
+        startView.setOnShowHighscores(() -> {
+            showHighscores(stage);
+        });
+
         stage.setTitle("Mastermind");
         stage.setScene(startScene);
         stage.setResizable(false);
         stage.show();
+    }
+
+    /**
+     * Zeigt die Highscore-Tabelle an.
+     * "Zurueck" kehrt zum Startbildschirm zurueck.
+     */
+    private void showHighscores(Stage stage) {
+        HighscoreView hsView = new HighscoreView();
+        javafx.scene.Scene hsScene = hsView.buildScene();
+
+        // "Zurueck" gedrueckt → wieder Startbildschirm
+        hsView.setOnBack(() -> showStartScreen(stage));
+
+        stage.setTitle("Mastermind - Highscores");
+        stage.setScene(hsScene);
     }
 
     public static void main(String[] args) {

@@ -7,7 +7,7 @@ import javafx.util.Duration;
 
 /**
  * CONTROLLER - steuert den Spielablauf.
- * Verwaltet auch den Timer (JavaFX Timeline).
+ * Startet Timer bei Spielbeginn, speichert Highscore bei Gewinn.
  */
 public class MastermindController {
 
@@ -17,9 +17,9 @@ public class MastermindController {
     private final String          playerName;
 
     private final char[] currentGuess = new char[MastermindModel.CODE_LENGTH];
-    private int filledSlots = 0;
+    private int  filledSlots   = 0;
 
-    // Timer - zaehlt Sekunden seit Spielstart
+    // Timer
     private Timeline timer;
     private long     elapsedSeconds = 0;
 
@@ -32,18 +32,15 @@ public class MastermindController {
     }
 
     public void run() {
-        // Szene aufbauen (mit Spielername und Versuchsanzahl)
         javafx.scene.Scene scene = view.buildScene(playerName, model.getMaxAttempts());
 
-        // ── Timer starten ──────────────────────────────────────────────────
-        // JavaFX Timeline: jede Sekunde wird elapsedSeconds erhoeht
-        // und der Timer-Label in der View aktualisiert
+        // ── Timer starten (laeuft ab dem ersten Anzeigen der Szene) ────────
         timer = new Timeline(new KeyFrame(Duration.seconds(1), e -> {
             elapsedSeconds++;
             view.updateTimer(elapsedSeconds);
         }));
-        timer.setCycleCount(Timeline.INDEFINITE); // laeuft endlos bis gestoppt
-        timer.play();
+        timer.setCycleCount(Timeline.INDEFINITE);
+        timer.play(); // Timer startet sofort wenn Spiel beginnt
 
         // ── Farbe gewaehlt ─────────────────────────────────────────────────
         view.setOnColorSelected(colorChar -> {
@@ -55,7 +52,7 @@ public class MastermindController {
             }
         });
 
-        // ── Loeschen gedrueckt ─────────────────────────────────────────────
+        // ── Loeschen ───────────────────────────────────────────────────────
         view.setOnDelete(() -> {
             if (filledSlots > 0) {
                 filledSlots--;
@@ -64,7 +61,7 @@ public class MastermindController {
             }
         });
 
-        // ── Abschicken gedrueckt ───────────────────────────────────────────
+        // ── Abschicken ─────────────────────────────────────────────────────
         view.setOnSubmit(() -> {
             if (filledSlots < MastermindModel.CODE_LENGTH) return;
             if (model.isGameWon() || model.isGameOver()) return;
@@ -72,26 +69,39 @@ public class MastermindController {
             model.processGuess(new String(currentGuess));
             view.updateBoard(model);
 
-            // Eingabe zuruecksetzen
             filledSlots = 0;
             for (int i = 0; i < MastermindModel.CODE_LENGTH; i++) currentGuess[i] = 0;
             view.updateCurrentGuess(currentGuess, filledSlots);
 
-            // Spielende pruefen
             if (model.isGameWon()) {
-                timer.stop();           // Timer anhalten
-                view.stopTimer();       // Timer grau faerben
+                timer.stop();
+                view.stopTimer();
                 view.disableInput();
-                view.showWinAlert(playerName, model.getCurrentAttempt(), elapsedSeconds);
+
+                // ── Highscore speichern (nur bei Gewinn) ───────────────────
+                boolean isNewHighscore = HighscoreManager.isHighscore(
+                        model.getCurrentAttempt(), elapsedSeconds
+                );
+                HighscoreManager.saveScore(
+                        playerName,
+                        model.getCurrentAttempt(),
+                        elapsedSeconds,
+                        model.getMaxAttempts()
+                );
+
+                view.showWinAlert(playerName, model.getCurrentAttempt(),
+                        elapsedSeconds, isNewHighscore);
+
             } else if (model.isGameOver()) {
                 timer.stop();
                 view.stopTimer();
                 view.disableInput();
+                // Bei Verlust kein Highscore-Eintrag
                 view.showLossAlert(playerName, model.getSecretCodeAsString(), elapsedSeconds);
             }
         });
 
-        stage.setTitle("Mastermind – " + playerName);
+        stage.setTitle("Mastermind - " + playerName);
         stage.setScene(scene);
         stage.setResizable(false);
         stage.show();
