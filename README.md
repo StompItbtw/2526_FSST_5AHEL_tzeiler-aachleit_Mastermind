@@ -28,3 +28,4 @@ zeit mitlaufen lassen
 name eingeben  
 Achleitner:  
 bei start messung begonnen und highscore speichern in datei, und highscore einbelnden  
+Probleme mit Profil behoben

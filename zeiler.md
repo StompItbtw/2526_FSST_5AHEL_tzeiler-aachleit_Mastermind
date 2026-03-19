@@ -51,9 +51,8 @@ Bild: Spiel
 
 ### 2.Stunde:
 
+füge mir jetzt diese aufgaben hinzu  
+Bild: Aufgabe
 
 
-
-
-Bild: Main
 
