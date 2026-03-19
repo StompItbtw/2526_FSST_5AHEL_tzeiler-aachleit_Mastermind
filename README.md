@@ -15,7 +15,16 @@ Fehler mit pom beim starten
 
 
 ##19.03
-### 1 Stunde:
+### 1.Stunde:
 Zeiler:  
-Oberfläche erstellen
+Oberfläche erstellen  
+Fehler beheben, Spiel funktuioniert
 
+### 2.Stunde
+Aufgaben:  
+Zeiler:  
+anzahl versuche einstellen  
+zeit mitlaufen lassen  
+name eingeben  
+Achleitner:  
+bei start messung begonnen und highscore speichern in datei, und highscore einbelnden  
