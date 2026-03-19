@@ -32,9 +32,28 @@ Bild: Bild von fehler
 
 ## 19.03
 
+### 1.Stunde:
+
 das ist die ausgabe in der konsole, erstelle mir jetzt in interface dazu nach der aufgabenstellung  
 Bild: Konsole
 
+programmcode ist falsch, hier müsste 2 blaue an der richtigen stelle sein  
+Bild: falsche Ausgabe bei Spiel
+
+immer noch gleich fehler, diese fehlerausgabe  
+Bild: Fehler in Konsole
+
 dieser fehler im main  
+Bild: main
+
+es geht, mache mir es so, dass ganz oben bei richtiger position und flasche position genau die gleichen kreise sind wie dann im spiel  
+Bild: Spiel
+
+### 2.Stunde:
+
+
+
+
+
 Bild: Main
 
