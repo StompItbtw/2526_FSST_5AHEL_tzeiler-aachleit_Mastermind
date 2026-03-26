@@ -35,10 +35,12 @@ public class MastermindView {
     private Label remainingLabel;
     private Button submitButton;
     private Button deleteButton;
+    private Button highscoreButton;
 
     private Consumer<Character> onColorSelected;
     private Runnable onSubmit;
     private Runnable onDelete;
+    private Runnable onHighscore;
 
     /** Baut die komplette JavaFX-Szene und gibt sie zurueck. */
     public Scene buildScene() {
@@ -207,8 +209,17 @@ public class MastermindView {
                         "-fx-background-radius: 8; -fx-padding: 9 18 9 18; -fx-cursor: hand;"
         );
 
+        highscoreButton = new Button("Highscore");
+        highscoreButton.setFont(Font.font("Monospace", 13));
+        highscoreButton.setStyle(
+                "-fx-background-color: " + ACCENT + "; -fx-text-fill: " + COLOR_TEXT + ";" +
+                        "-fx-background-radius: 8; -fx-padding: 9 18 9 18; -fx-cursor: hand;"
+        );
+
+
         submitButton.setOnAction(e -> { if (onSubmit != null) onSubmit.run(); });
         deleteButton.setOnAction(e -> { if (onDelete != null) onDelete.run(); });
+        highscoreButton.setOnAction(e -> { if (onHighscore != null) onHighscore.run(); });
 
         HBox ctrlBtns = new HBox(10);
         ctrlBtns.getChildren().addAll(submitButton, deleteButton);
@@ -379,4 +390,5 @@ public class MastermindView {
     public void setOnColorSelected(Consumer<Character> h) { this.onColorSelected = h; }
     public void setOnSubmit(Runnable h)                   { this.onSubmit = h; }
     public void setOnDelete(Runnable h)                   { this.onDelete = h; }
+    public void setOnHighscore(Runnable h)                { this.onHighscore = h; }
 }

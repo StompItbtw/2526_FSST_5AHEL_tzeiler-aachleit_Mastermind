@@ -61,6 +61,13 @@ public class MastermindController {
             }
         });
 
+        view.setOnSubmit(() -> {
+            //ToDo: PopUpWindow Anzeigen lassen
+
+
+
+        });
+
         // ── Callback: Spieler drückt "Abschicken" ─────────────────────────
         view.setOnSubmit(() -> {
             // Nur abschicken wenn alle 4 Slots gefüllt und Spiel noch läuft
