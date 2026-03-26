@@ -12,6 +12,8 @@ public class MastermindController {
     private final MastermindModel model;
     private final MastermindView view;
     private final Stage stage;
+    private final HighscoreManager   highscoreManager;
+
 
     // Der aktuell eingegebene Versuch (wird Slot für Slot befüllt)
     private final char[] currentGuess = new char[MastermindModel.CODE_LENGTH];
@@ -22,10 +24,11 @@ public class MastermindController {
     /**
      * Konstruktor – erhält alle drei Abhängigkeiten von HelloApplication.
      */
-    public MastermindController(MastermindModel model, MastermindView view, Stage stage) {
+    public MastermindController(MastermindModel model, MastermindView view, Stage stage, HighscoreManager highscoreManager) {
         this.model = model;
         this.view  = view;
         this.stage = stage;
+        this.highscoreManager = highscoreManager;
     }
 
     /**
