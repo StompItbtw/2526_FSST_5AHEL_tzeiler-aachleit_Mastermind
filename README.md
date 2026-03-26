@@ -22,10 +22,17 @@ Fehler beheben, Spiel funktuioniert
 
 ### 2.Stunde
 Aufgaben:  
-Zeiler:  
+#Zeiler:  
 anzahl versuche einstellen  
 zeit mitlaufen lassen  
 name eingeben  
-Achleitner:  
+
+#Achleitner:  
 bei start messung begonnen und highscore speichern in datei, und highscore einbelnden  
 Probleme mit Profil behoben
+
+##26.03
+Zeiler nicht anwesend
+#Achleitner:
+Highscore Manager + Highscore Butten erstellt und teilweise implementiert
+
