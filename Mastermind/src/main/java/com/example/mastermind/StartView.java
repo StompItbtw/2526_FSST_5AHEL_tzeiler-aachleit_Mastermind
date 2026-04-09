@@ -81,6 +81,25 @@ public class StartView {
         );
         nameField.setOnAction(e -> { if (onStart != null) onStart.run(); });
 
+        // Spielervorwahl
+        HBox Vorwahl = new HBox(8);
+        Vorwahl.setAlignment(Pos.CENTER_LEFT);
+        Label VorwahlLbl = new Label("Vorwahl: ");
+        VorwahlLbl.setFont(Font.font("Monospace", 11));
+        VorwahlLbl.setStyle("-fx-text-fill: #8888AA;");
+        Vorwahl.getChildren().add(VorwahlLbl);
+        for (String preset : new String[]{}) {
+            Button pBtn = new Button(preset);
+            pBtn.setFont(Font.font("Monospace", 11));
+            pBtn.setStyle(
+                    "-fx-background-color: #2A2A4A; -fx-text-fill: #AAAACC;" +
+                            "-fx-background-radius: 6; -fx-padding: 4 10 4 10; -fx-cursor: hand;"
+            );
+            pBtn.setOnAction(ev -> nameField.setText(preset));
+            Vorwahl.getChildren().add(pBtn);
+        }
+
+
         // Versuche
         Label attLabel = new Label("Anzahl Versuche:");
         attLabel.setFont(Font.font("Monospace", FontWeight.BOLD, 13));
@@ -112,6 +131,8 @@ public class StartView {
             qBtn.setOnAction(e -> attemptsSpinner.getValueFactory().setValue(v));
             quick.getChildren().add(qBtn);
         }
+
+
 
         // Trennlinie
         Separator sep = new Separator();
@@ -145,7 +166,7 @@ public class StartView {
         highscoreButton.setOnAction(e -> { if (onShowHighscores != null) onShowHighscores.run(); });
 
         form.getChildren().addAll(
-                nameLabel, nameField,
+                nameLabel, nameField, Vorwahl,
                 attLabel, attemptsSpinner, quick,
                 sep,
                 startButton, highscoreButton
